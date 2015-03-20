@@ -1,0 +1,13 @@
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\Assembly-CSharp.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\Assembly-CSharp.pdb
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\UnityEditor.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\UnityEngine.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\UnityEngine.UI.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\Mono.Cecil.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\Unity.SerializationLogic.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\Unity.DataContract.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\ICSharpCode.NRefactory.dll
+E:\Workspace\UnityProjects\Maze\Temp\bin\Debug\Unity.CecilTools.dll
+E:\Workspace\UnityProjects\Maze\obj\Debug\Assembly-CSharp.csprojResolveAssemblyReference.cache
+E:\Workspace\UnityProjects\Maze\obj\Debug\Assembly-CSharp.dll
+E:\Workspace\UnityProjects\Maze\obj\Debug\Assembly-CSharp.pdb
