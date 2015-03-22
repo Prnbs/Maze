@@ -1,13 +1,16 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\GridScript.cs">
     <Files>
-      <File FileName="Assets\Scripts\CellScript.cs" Line="11" Column="1" />
-      <File FileName="Assets\Scripts\GridScript.cs" Line="75" Column="14" />
+      <File FileName="Assets\Scripts\GridScript.cs" Line="167" Column="74" />
+      <File FileName="Assets\Scripts\CellScript.cs" Line="18" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="E:\Workspace\UnityProjects\Maze\Assets\Scripts\GridScript.cs" line="160" />
+      <Breakpoint file="E:\Workspace\UnityProjects\Maze\Assets\Scripts\CellScript.cs" line="21" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>
