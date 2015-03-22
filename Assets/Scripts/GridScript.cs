@@ -49,7 +49,7 @@ public class GridScript : MonoBehaviour {
 	void Prim(){
 		//Lets just assume Start cell is Grid[0,0]
 		Transform cell = Grid[0,0];
-		Grid[0,0].GetComponent<Renderer>().material.color = Color.green;
+		//Grid[0,0].GetComponent<Renderer>().material.color = Color.green;
 		EdgeNode start = new EdgeNode (cell, 0, null);//no edge weight for start cell
 		start.thisEdge.GetComponent<CellScript>().seen = true;
 		Maze.Add (start);
@@ -69,7 +69,7 @@ public class GridScript : MonoBehaviour {
 				minNode.thisEdge.GetComponent<CellScript>().seen = true;
 				Maze.Add(minNode);
 				minNode.parent.Adjacents.Add(minNode.thisEdge);
-				minNode.thisEdge.GetComponent<Renderer>().material.color = Color.red;
+			//	minNode.thisEdge.GetComponent<Renderer>().material.color = Color.red;
 			}
 			else 
 				continue;
