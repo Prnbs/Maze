@@ -33,6 +33,8 @@ public class GridScript : MonoBehaviour
 	public Vector3 GridSize;
 	public Transform[,] Grid;
 
+	public string[] wallNames = {"North", "South", "East", "West"};
+
 	//The graph will be a list of EdgeNodes
 	//nVerices = sizeof(Maze)
 	private List<EdgeNode> Maze;
@@ -48,6 +50,7 @@ public class GridScript : MonoBehaviour
 		Maze = new List<EdgeNode> ();
 		Heap = new List<EdgeNode> ();
 		Prim ();
+		CreateMaze ();
 	}
 
 	void Prim()
@@ -80,11 +83,11 @@ public class GridScript : MonoBehaviour
 				//ensure this vertex won'rt get added to the maze in the future
 				minNode.thisEdge.GetComponent<CellScript>().seen = true;
 				//found a vertex which goes in the MST
+				minNode.childWrtParent = WhereIsChild(minNode.parent.thisEdge.GetComponent<CellScript>().Position,
+				                                       minNode.thisEdge.GetComponent<CellScript>().Position);
 				Maze.Add(minNode);
 				//now add this vertex to the adjacent list of it's parent
 				minNode.parent.Adjacents.Add(minNode);
-				minNode.childWrtParent = WhereIsChilld(minNode.parent.thisEdge.GetComponent<CellScript>().Position,
-				                                       minNode.thisEdge.GetComponent<CellScript>().Position);
 			//	minNode.thisEdge.GetComponent<Renderer>().material.color = Color.red;
 			} 
 			else 
@@ -103,10 +106,12 @@ public class GridScript : MonoBehaviour
 			}
 			Heap.Sort ();
 		}
-		PrintMaze ();
+		//PrintMaze ();
 	}
 
-	EdgeNode.Walls WhereIsChilld(Vector3 parentPos, Vector3 childPos)
+	//get position of child wrt parent
+	//eg. if child is above parent this returns NORTH
+	EdgeNode.Walls WhereIsChild(Vector3 parentPos, Vector3 childPos)
 	{
 		Vector3 diffVector = childPos - parentPos;
 		if (diffVector.x == 0) //North or South
@@ -135,8 +140,34 @@ public class GridScript : MonoBehaviour
 			//adjacent already knows where it is wrt parent
 			foreach(EdgeNode adjacent in vertex.Adjacents)
 			{
-				
+				//TODO: FIX ME!!
+				//USING THIS REVERSED FOR NOW, NEED TO GET WHO IS WHERE WRT EACH OTHER
+				string child = wallNames[(int)WhereIsParent(adjacent.childWrtParent)];
+				string parent  = wallNames[(int)adjacent.childWrtParent];
+				Transform parentWall = vertex.thisEdge.FindChild(parent);
+				Transform childWall  = adjacent.thisEdge.FindChild(child);
+				Destroy(parentWall.gameObject);
+				Destroy(childWall.gameObject);
+			//	String tag = adjCell.tag;
+				Debug.Log(tag);
 			}
+		}
+	}
+
+	EdgeNode.Walls WhereIsParent(EdgeNode.Walls childPosn)
+	{
+		switch (childPosn) 
+		{
+			case EdgeNode.Walls.EAST:
+				return EdgeNode.Walls.WEST;
+			case EdgeNode.Walls.WEST:
+				return EdgeNode.Walls.EAST;
+			case EdgeNode.Walls.NORTH:
+				return EdgeNode.Walls.SOUTH;
+			case EdgeNode.Walls.SOUTH:
+				return EdgeNode.Walls.NORTH;
+			default:
+				return EdgeNode.Walls.NORTH;
 		}
 	}
 
