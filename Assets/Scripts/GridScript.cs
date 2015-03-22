@@ -55,14 +55,17 @@ public class GridScript : MonoBehaviour
 		//Lets just assume Start cell is Grid[0,0]
 		Transform cell = Grid[0,0];
 		//Grid[0,0].GetComponent<Renderer>().material.color = Color.green;
-		EdgeNode start = new EdgeNode (cell, 0, null);//no edge weight for start cell
-		start.thisEdge.GetComponent<CellScript>().seen = true;
+		EdgeNode start = new EdgeNode (cell, 0, null);//no parent for start cell
+		//stupid repeat of same code happens below
+		//add start node
 		Maze.Add (start);
-		foreach (CellScript.CellNode adj in cell.GetComponent<CellScript>().Adjacents)
+		start.thisEdge.GetComponent<CellScript>().seen = true;
+		foreach (Transform adj in cell.GetComponent<CellScript>().Adjacents)
 		{
 			int parentWeight   = cell.GetComponent<CellScript> ().Weight; 
-			int adjacentWeight = adj.cell.GetComponent<CellScript> ().Weight;
-			Heap.Add (new EdgeNode (adj.cell, Mathf.Abs (parentWeight - adjacentWeight), start));
+			int adjacentWeight = adj.GetComponent<CellScript> ().Weight;
+			//now add this vertex to the adjacent list of it's parent
+			Heap.Add (new EdgeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), start));
 		}
 		Heap.Sort ();
 		//stop when maze contains all the vertices
@@ -74,23 +77,28 @@ public class GridScript : MonoBehaviour
 			//Add this vertex if it isn't already in the maze
 			if(!minNode.thisEdge.GetComponent<CellScript>().seen)
 			{
+				//ensure this vertex won'rt get added to the maze in the future
 				minNode.thisEdge.GetComponent<CellScript>().seen = true;
+				//found a vertex which goes in the MST
 				Maze.Add(minNode);
+				//now add this vertex to the adjacent list of it's parent
 				minNode.parent.Adjacents.Add(minNode);
-
+				minNode.childWrtParent = WhereIsChilld(minNode.parent.thisEdge.GetComponent<CellScript>().Position,
+				                                       minNode.thisEdge.GetComponent<CellScript>().Position);
 			//	minNode.thisEdge.GetComponent<Renderer>().material.color = Color.red;
-			}
+			} 
 			else 
 				continue;
 			//Now add the adjacents of this new vertex into the heap
-			foreach (CellScript.CellNode adj in minNode.thisEdge.GetComponent<CellScript>().Adjacents)
+			foreach (Transform adj in minNode.thisEdge.GetComponent<CellScript>().Adjacents)
 			{
 				//provided it isn't in the maze
-				if(!adj.cell.GetComponent<CellScript>().seen)
+				if(!adj.GetComponent<CellScript>().seen)
 				{
 					int parentWeight   = minNode.thisEdge.GetComponent<CellScript> ().Weight; 
-					int adjacentWeight = adj.cell.GetComponent<CellScript> ().Weight;
-					Heap.Add (new EdgeNode (adj.cell, Mathf.Abs (parentWeight - adjacentWeight), minNode));
+					int adjacentWeight = adj.GetComponent<CellScript> ().Weight;
+					//calculate edge weight from the given vertex weights
+					Heap.Add (new EdgeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), minNode));
 				}
 			}
 			Heap.Sort ();
@@ -98,14 +106,36 @@ public class GridScript : MonoBehaviour
 		PrintMaze ();
 	}
 
+	EdgeNode.Walls WhereIsChilld(Vector3 parentPos, Vector3 childPos)
+	{
+		Vector3 diffVector = childPos - parentPos;
+		if (diffVector.x == 0) //North or South
+		{
+			if(diffVector.z > 0)
+				return EdgeNode.Walls.EAST;
+			else
+				return EdgeNode.Walls.WEST;
+		}
+		if (diffVector.z == 0) //East or West
+		{
+			if(diffVector.x > 0)
+				return EdgeNode.Walls.NORTH;
+			else
+				return EdgeNode.Walls.SOUTH;
+		}
+		return EdgeNode.Walls.EAST;
+	}
+
 
 	void CreateMaze()
 	{
 		foreach (EdgeNode vertex in Maze)
-		{
+		{	
+			//vertex will be parent and adjacent will be child
+			//adjacent already knows where it is wrt parent
 			foreach(EdgeNode adjacent in vertex.Adjacents)
 			{
-
+				
 			}
 		}
 	}
@@ -157,36 +187,31 @@ public class GridScript : MonoBehaviour
 				Transform cell = Grid[x,z];
 				CellScript cScript = cell.GetComponent<CellScript>();
 
-				CellScript.CellNode cellNode;
 				if(x-1 >= 0)
 				{
-					cellNode = new CellScript.CellNode(Grid[x-1,z], CellScript.Walls.WEST);
-					cScript.Adjacents.Add(cellNode);
+					cScript.Adjacents.Add(Grid[x-1,z]);
 				}
 				if(x+1 < GridSize.x)
 				{
-					cellNode = new CellScript.CellNode(Grid[x+1,z], CellScript.Walls.EAST);
-					cScript.Adjacents.Add(cellNode);
+					cScript.Adjacents.Add(Grid[x+1,z]);
 				}
 				if(z-1 >= 0)
 				{
-					cellNode = new CellScript.CellNode(Grid[x,z-1], CellScript.Walls.SOUTH);
-					cScript.Adjacents.Add(cellNode);
+					cScript.Adjacents.Add(Grid[x,z-1]);
 				}
 				if(z+1 < GridSize.z)
 				{
-					cellNode = new CellScript.CellNode(Grid[x,z+1], CellScript.Walls.NORTH);
-					cScript.Adjacents.Add(cellNode);
+					cScript.Adjacents.Add(Grid[x,z+1]);
 				}
 				cScript.Adjacents.Sort(SortAdjacentsByWeight);
 			}
 		}
 	}
 
-	int SortAdjacentsByWeight(CellScript.CellNode itemA, CellScript.CellNode itemB)
+	int SortAdjacentsByWeight(Transform itemA, Transform itemB)
 	{
-		int weightA = itemA.cell.GetComponent<CellScript> ().Weight;
-		int weightB = itemB.cell.GetComponent<CellScript> ().Weight;
+		int weightA = itemA.GetComponent<CellScript> ().Weight;
+		int weightB = itemB.GetComponent<CellScript> ().Weight;
 		return weightA.CompareTo (weightB);
 	}
 
@@ -194,6 +219,7 @@ public class GridScript : MonoBehaviour
 	{
 		if(Input.GetKeyDown(KeyCode.R))
 		   Application.LoadLevel(0);
+
 	}
 
 }
