@@ -1,17 +1,19 @@
 ﻿using System;
-//using System.Random;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 public class EdgeNode :  IComparable<EdgeNode>{
 	public Transform thisEdge;
-	public int edgeWeight;/*{
-		get{ return edgeWeight;}
-		set{ edgeWeight = value;}
-	}*/
-	public string tag;
+	public int edgeWeight;
 	public List<Transform> Adjacents;
+	public EdgeNode parent;
+
+	public EdgeNode(Transform edge, int weight, EdgeNode forfather){
+		thisEdge = edge;
+		edgeWeight = weight;
+		parent = forfather;
+	}
 
 	public int CompareTo(EdgeNode right)
 	{
@@ -40,11 +42,53 @@ public class GridScript : MonoBehaviour {
 		SetAdjacents ();
 		Maze = new List<EdgeNode> ();
 		Heap = new List<EdgeNode> ();
+		Prim ();
 	}
 
+	void Prim(){
+		//Lets just assume Start cell is Grid[0,0]
+		Transform cell = Grid[0,0];
+		EdgeNode start = new EdgeNode (cell, 0, null);//no edge weight for start cell
+		start.thisEdge.GetComponent<CellScript>().seen = true;
+		Maze.Add (start);
+		foreach (Transform adj in cell.GetComponent<CellScript>().Adjacents) {
+			int parentWeight   = cell.GetComponent<CellScript> ().Weight; 
+			int adjacentWeight = adj.GetComponent<CellScript> ().Weight;
+			Heap.Add (new EdgeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), start));
+		}
+		Heap.Sort ();
+		//stop when maze contains all the vertices
+		while (Maze.Count < GridSize.x * GridSize.z) {
+			//get edge with lowest edge weight
+			EdgeNode minNode = Heap[0];
+			Heap.RemoveAt(0);
+			//Add this vertex if it isn't already in the maze
+			if(!minNode.thisEdge.GetComponent<CellScript>().seen){
+				minNode.thisEdge.GetComponent<CellScript>().seen = true;
+				Maze.Add(minNode);
+				minNode.thisEdge.GetComponent<CellScript>().Position.y = 0.5f;
+			}
+			else 
+				continue;
+			//Now add the adjacents of this new vertex into the heap
+			foreach (Transform adj in minNode.thisEdge.GetComponent<CellScript>().Adjacents) {
+				//provided it isn't in the maze
+				if(!adj.GetComponent<CellScript>().seen){
+					int parentWeight   = minNode.thisEdge.GetComponent<CellScript> ().Weight; 
+					int adjacentWeight = adj.GetComponent<CellScript> ().Weight;
+					Heap.Add (new EdgeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), minNode));
+				}
+			}
+			Heap.Sort ();
+		}
+		PrintMaze ();
+	}
 
-	//var dictionary =
-	//	new SortedDictionary<int, string>(Comparer<int>.Create((x, y) => y.CompareTo(x)));
+	void PrintMaze(){
+		foreach (EdgeNode ed in Maze) {
+			Debug.Log(ed.thisEdge.GetComponent<CellScript> ().name);
+		}
+	}
 
 	void CreateGrid()
 	{

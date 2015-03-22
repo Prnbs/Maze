@@ -6,6 +6,5 @@ public class CellScript : MonoBehaviour {
 	public List<Transform> Adjacents;
 	public Vector3 Position;
 	public int Weight;
-
-
+	public bool seen = false;
 }
