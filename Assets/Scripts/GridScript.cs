@@ -1,17 +1,50 @@
-﻿using UnityEngine;
+﻿using System;
+//using System.Random;
+using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+
+public class EdgeNode :  IComparable<EdgeNode>{
+	public Transform thisEdge;
+	public int edgeWeight;/*{
+		get{ return edgeWeight;}
+		set{ edgeWeight = value;}
+	}*/
+	public string tag;
+	public List<Transform> Adjacents;
+
+	public int CompareTo(EdgeNode right)
+	{
+		return this.edgeWeight.CompareTo (right.edgeWeight);
+	}
+}
 
 public class GridScript : MonoBehaviour {
 	public Transform CellPrefab;
 	public Vector3 GridSize;
 	public Transform[,] Grid;
 
+	//The graph will be a list of EdgeNodes
+	//nVerices = sizeof(Maze)
+	private List<EdgeNode> Maze;
+	//Since unity won't support SortedSet we are forced to use SortedList
+	//The weight can't be the key since there will be duplicates
+	private List<EdgeNode> Heap;
+
+	private EdgeNode ed;
+
 	void Start()
 	{
 		CreateGrid ();
-		SetRandomNumbers ();
+		SetRandomCellWeights ();
 		SetAdjacents ();
+		Maze = new List<EdgeNode> ();
+		Heap = new List<EdgeNode> ();
 	}
+
+
+	//var dictionary =
+	//	new SortedDictionary<int, string>(Comparer<int>.Create((x, y) => y.CompareTo(x)));
 
 	void CreateGrid()
 	{
@@ -28,13 +61,12 @@ public class GridScript : MonoBehaviour {
 		}
 		Camera.main.transform.position = Grid [(int)(GridSize.x / 2), (int)(GridSize.z / 2)].position + Vector3.up * 40f;
 		Camera.main.orthographicSize = Mathf.Max (GridSize.x/2, GridSize.z/2);
-
 	}
 
-	void SetRandomNumbers(){
+	void SetRandomCellWeights(){
 		foreach (Transform child in transform) {
 			TextMesh childText = child.GetComponentInChildren<TextMesh>();
-			int weight = Random.Range(0,10);
+			int weight = UnityEngine.Random.Range(0,10);
 			childText.text = weight.ToString();
 			child.GetComponent<CellScript>().Weight = weight;
 		}

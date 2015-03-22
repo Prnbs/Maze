@@ -7,13 +7,5 @@ public class CellScript : MonoBehaviour {
 	public Vector3 Position;
 	public int Weight;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
 }
