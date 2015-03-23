@@ -3,25 +3,24 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class EdgeNode :  IComparable<EdgeNode>
+public class MazeNode :  IComparable<MazeNode>
 {
 	public Transform thisEdge;
 	public int edgeWeight;
-	public List<EdgeNode> Adjacents;
-	public EdgeNode parent;
+	public List<MazeNode> Adjacents;
+	public MazeNode parent;
 	public Walls childWrtParent;
-
 	public enum Walls { NORTH, SOUTH, EAST, WEST };
 
-	public EdgeNode(Transform edge, int weight, EdgeNode forefather)
+	public MazeNode(Transform edge, int weight, MazeNode forefather)
 	{
-		thisEdge = edge;
+		thisEdge   = edge;
 		edgeWeight = weight;
-		parent = forefather;
-		Adjacents = new List<EdgeNode> ();
+		parent     = forefather;
+		Adjacents  = new List<MazeNode> ();
 	}
 
-	public int CompareTo(EdgeNode right)
+	public int CompareTo(MazeNode right)
 	{
 		return this.edgeWeight.CompareTo (right.edgeWeight);
 	}
@@ -35,30 +34,38 @@ public class GridScript : MonoBehaviour
 
 	public string[] wallNames = {"North", "South", "East", "West"};
 
-	//The graph will be a list of EdgeNodes
+	//The graph will be a list of MazeNodes
 	//nVerices = sizeof(Maze)
-	private List<EdgeNode> Maze;
+	private List<MazeNode> Maze;
 	//Since unity won't support SortedSet we are forced to use SortedList
 	//The weight can't be the key since there will be duplicates
-	private List<EdgeNode> Heap;
+	private List<MazeNode> Heap;
+	// The shortest route to the exit 
+	// this will be populated by BFS
+	private List<Transform> parent;
 
 	void Start()
 	{
 		CreateGrid ();
 		SetRandomCellWeights ();
 		SetAdjacents ();
-		Maze = new List<EdgeNode> ();
-		Heap = new List<EdgeNode> ();
-		Prim ();
+		Maze = new List<MazeNode> ();
+		Heap = new List<MazeNode> ();
+		CreateMST ();
 		CreateMaze ();
 	}
 
-	void Prim()
+	void BFS(List<MazeNode> maze)
+	{
+
+	}
+
+	void CreateMST()
 	{
 		//Lets just assume Start cell is Grid[0,0]
 		Transform cell = Grid[0,0];
 		//Grid[0,0].GetComponent<Renderer>().material.color = Color.green;
-		EdgeNode start = new EdgeNode (cell, 0, null);//no parent for start cell
+		MazeNode start = new MazeNode (cell, 0, null);//no parent for start cell
 		//stupid repeat of same code happens below
 		//add start node
 		Maze.Add (start);
@@ -68,14 +75,14 @@ public class GridScript : MonoBehaviour
 			int parentWeight   = cell.GetComponent<CellScript> ().Weight; 
 			int adjacentWeight = adj.GetComponent<CellScript> ().Weight;
 			//now add this vertex to the adjacent list of it's parent
-			Heap.Add (new EdgeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), start));
+			Heap.Add (new MazeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), start));
 		}
 		Heap.Sort ();
 		//stop when maze contains all the vertices
 		while (Maze.Count < GridSize.x * GridSize.z) 
 		{
 			//get edge with lowest edge weight
-			EdgeNode minNode = Heap[0];
+			MazeNode minNode = Heap[0];
 			Heap.RemoveAt(0);
 			//Add this vertex if it isn't already in the maze
 			if(!minNode.thisEdge.GetComponent<CellScript>().seen)
@@ -101,34 +108,35 @@ public class GridScript : MonoBehaviour
 					int parentWeight   = minNode.thisEdge.GetComponent<CellScript> ().Weight; 
 					int adjacentWeight = adj.GetComponent<CellScript> ().Weight;
 					//calculate edge weight from the given vertex weights
-					Heap.Add (new EdgeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), minNode));
+					Heap.Add (new MazeNode (adj, Mathf.Abs (parentWeight - adjacentWeight), minNode));
 				}
 			}
 			Heap.Sort ();
 		}
-		//PrintMaze ();
+		//save some memory
+		Heap.Clear ();
 	}
 
 	//get position of child wrt parent
 	//eg. if child is above parent this returns NORTH
-	EdgeNode.Walls WhereIsChild(Vector3 parentPos, Vector3 childPos)
+	MazeNode.Walls WhereIsChild(Vector3 parentPos, Vector3 childPos)
 	{
 		Vector3 diffVector = childPos - parentPos;
 		if (diffVector.x == 0) //North or South
 		{
 			if(diffVector.z > 0)
-				return EdgeNode.Walls.NORTH;
+				return MazeNode.Walls.NORTH;
 			else
-				return EdgeNode.Walls.SOUTH;
+				return MazeNode.Walls.SOUTH;
 		}
 		if (diffVector.z == 0) //East or West
 		{
 			if(diffVector.x > 0)
-				return EdgeNode.Walls.WEST;
+				return MazeNode.Walls.WEST;
 			else
-				return EdgeNode.Walls.EAST;
+				return MazeNode.Walls.EAST;
 		}
-		return EdgeNode.Walls.EAST;
+		return MazeNode.Walls.EAST;
 	}
 
 
@@ -136,16 +144,16 @@ public class GridScript : MonoBehaviour
 	{
 		Transform startWall = Maze[0].thisEdge.FindChild("South");
 		Destroy(startWall.gameObject);
-		foreach (EdgeNode vertex in Maze)
+		foreach (MazeNode vertex in Maze)
 		{	
 			//vertex will be parent and adjacent will be child
 			//adjacent already knows where it is wrt parent
-			foreach(EdgeNode adjacent in vertex.Adjacents)
+			foreach(MazeNode adjacent in vertex.Adjacents)
 			{
 				//TODO: FIX ME!!
 				//USING THIS REVERSED FOR NOW, NEED TO GET WHO IS WHERE WRT EACH OTHER
-				string child   = wallNames[(int)WhereIsParent(adjacent.childWrtParent)];
-				string parent  = wallNames[(int)adjacent.childWrtParent];
+				string child   		 = wallNames[(int)WhereIsParent(adjacent.childWrtParent)];
+				string parent  		 = wallNames[(int)adjacent.childWrtParent];
 				Transform parentWall = vertex.thisEdge.FindChild(parent);
 				Transform childWall  = adjacent.thisEdge.FindChild(child);
 				Destroy(parentWall.gameObject);
@@ -154,26 +162,26 @@ public class GridScript : MonoBehaviour
 		}
 	}
 
-	EdgeNode.Walls WhereIsParent(EdgeNode.Walls childPosn)
+	MazeNode.Walls WhereIsParent(MazeNode.Walls childPosn)
 	{
 		switch (childPosn) 
 		{
-			case EdgeNode.Walls.EAST:
-				return EdgeNode.Walls.WEST;
-			case EdgeNode.Walls.WEST:
-				return EdgeNode.Walls.EAST;
-			case EdgeNode.Walls.NORTH:
-				return EdgeNode.Walls.SOUTH;
-			case EdgeNode.Walls.SOUTH:
-				return EdgeNode.Walls.NORTH;
+			case MazeNode.Walls.EAST:
+				return MazeNode.Walls.WEST;
+			case MazeNode.Walls.WEST:
+				return MazeNode.Walls.EAST;
+			case MazeNode.Walls.NORTH:
+				return MazeNode.Walls.SOUTH;
+			case MazeNode.Walls.SOUTH:
+				return MazeNode.Walls.NORTH;
 			default:
-				return EdgeNode.Walls.NORTH;
+				return MazeNode.Walls.NORTH;
 		}
 	}
 
 	void PrintMaze()
 	{
-		foreach (EdgeNode ed in Maze) 
+		foreach (MazeNode ed in Maze) 
 		{
 			Debug.Log(ed.thisEdge.GetComponent<CellScript> ().name);
 		}
@@ -187,15 +195,15 @@ public class GridScript : MonoBehaviour
 			for(int j = 0; j < GridSize.z; j++)
 			{
 				Transform newCell;
-				newCell = (Transform)Instantiate (CellPrefab, new Vector3(i, 0, j), Quaternion.identity);
+				newCell 	   = (Transform)Instantiate (CellPrefab, new Vector3(i, 0, j), Quaternion.identity);
 				newCell.parent = transform;
-				newCell.name = string.Format("({0},0,{1})",i,j);
+				newCell.name   = string.Format("({0},0,{1})",i,j);
+				Grid[i,j]      = newCell;
 				newCell.GetComponent<CellScript>().Position = new Vector3(i, 0 , j);
-				Grid[i,j] = newCell;
 			}
 		}
 		Camera.main.transform.position = Grid [(int)(GridSize.x / 2), (int)(GridSize.z / 2)].position + Vector3.up * 40f;
-		Camera.main.orthographicSize = Mathf.Max (GridSize.x/2, GridSize.z/2);
+		Camera.main.orthographicSize   = Mathf.Max (GridSize.x/2, GridSize.z/2);
 	}
 
 	void SetRandomCellWeights()
@@ -203,7 +211,7 @@ public class GridScript : MonoBehaviour
 		foreach (Transform child in transform)
 		{
 			TextMesh childText = child.GetComponentInChildren<TextMesh>();
-			int weight = UnityEngine.Random.Range(0,100);
+			int weight		   = UnityEngine.Random.Range(0,100);
 			//childText.text = weight.ToString();
 			child.GetComponent<CellScript>().Weight = weight;
 		}
