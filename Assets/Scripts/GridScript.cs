@@ -84,7 +84,7 @@ public class GridScript : MonoBehaviour
 				minNode.thisEdge.GetComponent<CellScript>().seen = true;
 				//found a vertex which goes in the MST
 				minNode.childWrtParent = WhereIsChild(minNode.parent.thisEdge.GetComponent<CellScript>().Position,
-				                                       minNode.thisEdge.GetComponent<CellScript>().Position);
+				                                      minNode.thisEdge.GetComponent<CellScript>().Position);
 				Maze.Add(minNode);
 				//now add this vertex to the adjacent list of it's parent
 				minNode.parent.Adjacents.Add(minNode);
@@ -117,16 +117,16 @@ public class GridScript : MonoBehaviour
 		if (diffVector.x == 0) //North or South
 		{
 			if(diffVector.z > 0)
-				return EdgeNode.Walls.EAST;
+				return EdgeNode.Walls.NORTH;
 			else
-				return EdgeNode.Walls.WEST;
+				return EdgeNode.Walls.SOUTH;
 		}
 		if (diffVector.z == 0) //East or West
 		{
 			if(diffVector.x > 0)
-				return EdgeNode.Walls.NORTH;
+				return EdgeNode.Walls.WEST;
 			else
-				return EdgeNode.Walls.SOUTH;
+				return EdgeNode.Walls.EAST;
 		}
 		return EdgeNode.Walls.EAST;
 	}
@@ -142,14 +142,14 @@ public class GridScript : MonoBehaviour
 			{
 				//TODO: FIX ME!!
 				//USING THIS REVERSED FOR NOW, NEED TO GET WHO IS WHERE WRT EACH OTHER
-				string child = wallNames[(int)WhereIsParent(adjacent.childWrtParent)];
+				string child   = wallNames[(int)WhereIsParent(adjacent.childWrtParent)];
 				string parent  = wallNames[(int)adjacent.childWrtParent];
 				Transform parentWall = vertex.thisEdge.FindChild(parent);
 				Transform childWall  = adjacent.thisEdge.FindChild(child);
+			//	parentWall.GetComponent<Renderer>().material.color = Color.blue;
+			//	childWall.GetComponent<Renderer>().material.color = Color.red;
 				Destroy(parentWall.gameObject);
 				Destroy(childWall.gameObject);
-			//	String tag = adjCell.tag;
-				Debug.Log(tag);
 			}
 		}
 	}
