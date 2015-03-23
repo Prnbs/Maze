@@ -134,6 +134,8 @@ public class GridScript : MonoBehaviour
 
 	void CreateMaze()
 	{
+		Transform startWall = Maze[0].thisEdge.FindChild("South");
+		Destroy(startWall.gameObject);
 		foreach (EdgeNode vertex in Maze)
 		{	
 			//vertex will be parent and adjacent will be child
@@ -146,8 +148,6 @@ public class GridScript : MonoBehaviour
 				string parent  = wallNames[(int)adjacent.childWrtParent];
 				Transform parentWall = vertex.thisEdge.FindChild(parent);
 				Transform childWall  = adjacent.thisEdge.FindChild(child);
-			//	parentWall.GetComponent<Renderer>().material.color = Color.blue;
-			//	childWall.GetComponent<Renderer>().material.color = Color.red;
 				Destroy(parentWall.gameObject);
 				Destroy(childWall.gameObject);
 			}
@@ -203,8 +203,8 @@ public class GridScript : MonoBehaviour
 		foreach (Transform child in transform)
 		{
 			TextMesh childText = child.GetComponentInChildren<TextMesh>();
-			int weight = UnityEngine.Random.Range(0,10);
-			childText.text = weight.ToString();
+			int weight = UnityEngine.Random.Range(0,100);
+			//childText.text = weight.ToString();
 			child.GetComponent<CellScript>().Weight = weight;
 		}
 	}

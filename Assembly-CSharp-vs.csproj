@@ -46,6 +46,7 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Scripts\AntagonistAlone.cs" />
      <Compile Include="Assets\Scripts\CellScript.cs" />
      <Compile Include="Assets\Scripts\GridScript.cs" />
  <Reference Include="UnityEngine.UI">
