@@ -1,16 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+
 
 public class AntagonistAlone : MonoBehaviour {
 			
 	private Rigidbody rb;
 	public float speed;
-	bool reached;
 
 	float m_speed;
 	float m_speed_multi = 2;
 
-	private Vector3 goal = new Vector3(4f,0.425f, 1f);
+	List<MazeNode> Maze;
+	Dictionary<Vector3, MazeNode> MazeMap;
+	Vector3 whereIam;
+	Vector3 intermediatePosn;
+	MazeNode currentNode;
+	MazeNode currentGoal;
+	public GameObject grid;
 	
 	// All physics code goes here
 	void FixedUpdate () {
@@ -20,37 +27,39 @@ public class AntagonistAlone : MonoBehaviour {
 		Vector3 movement = new Vector3 (moveHori, -100.0f, moveVert);
 		
 		rb.AddForce (movement * speed * Time.deltaTime);
-		
+
 	}
 	
 	void Start() {
 		rb = GetComponent<Rigidbody>();
-		reached = false;
+		Maze = grid.GetComponent<GridScript> ().Maze;
+		MazeMap = grid.GetComponent<GridScript> ().MazeMap;
 	}
 
-	void BFS()
+	void OnTriggerEnter(Collider other)
 	{
-
+		whereIam = other.transform.position;
+		intermediatePosn = whereIam;
+	//	Debug.Log (whereIam);
 	}
 
 	void Update()
 	{
-		/*m_speed = Time.deltaTime * m_speed_multi;
-		if (!reached) {
-			Vector3 whereIam = transform.position;
-			Vector3 distanceLeft = goal - whereIam;
-			distanceLeft.Normalize();
-			if (Mathf.Abs(distanceLeft.z) <= 0.1f)
-			{
-				reached = true;
-				transform.position = goal;
+		m_speed = Time.deltaTime * m_speed_multi;
+		if (MazeMap.TryGetValue (whereIam, out currentNode)) {
+			if(currentNode.bfsParent == null){
+				currentGoal = currentNode;
+				Vector3 distanceLeft = currentGoal.thisEdge.position - whereIam;
+				intermediatePosn += distanceLeft * m_speed;
+				transform.position = intermediatePosn;
 			}
 			else{
-				whereIam += distanceLeft * m_speed;
-				transform.position = whereIam;
+				currentGoal = currentNode.bfsParent;
+				Vector3 distanceLeft = currentGoal.thisEdge.position - whereIam;
+				intermediatePosn += distanceLeft * m_speed;
+				transform.position = intermediatePosn;
 			}
-		}*/
-
+		}
 	}
 
 			

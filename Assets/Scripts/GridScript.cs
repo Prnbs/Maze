@@ -11,6 +11,7 @@ public class MazeNode :  IComparable<MazeNode>
 	public MazeNode parent;
 	public Walls childWrtParent;
 	public enum Walls { NORTH, SOUTH, EAST, WEST };
+
 	//these fields are needed are bfs
 	public bool bfsSeen;
 	public MazeNode bfsParent;
@@ -22,6 +23,7 @@ public class MazeNode :  IComparable<MazeNode>
 		parent     = forefather;
 		Adjacents  = new List<MazeNode> ();
 		bfsSeen    = false;
+
 	}
 
 	public int CompareTo(MazeNode right)
@@ -35,12 +37,13 @@ public class GridScript : MonoBehaviour
 	public Transform CellPrefab;
 	public Vector3 GridSize;
 	public Transform[,] Grid;
+	public Transform AntagonistAt;
 
 	public string[] wallNames = {"North", "South", "East", "West"};
 
 	//The graph will be a list of MazeNodes
 	//nVerices = sizeof(Maze)
-	private List<MazeNode> Maze;
+	public List<MazeNode> Maze;
 	//Since unity won't support SortedSet we are forced to use SortedList
 	//The weight can't be the key since there will be duplicates
 	private List<MazeNode> Heap;
@@ -49,23 +52,41 @@ public class GridScript : MonoBehaviour
 	private List<Transform> parent;
 	//this will be the bfs tree with [0,0] as the start node
 	private List<MazeNode> BFSTree;
+	//need a better way to do this
+	public Dictionary<Vector3, MazeNode> MazeMap;
+	//queue for bfs
+	Queue<MazeNode> bfsQueue;
 
 	void Start()
 	{
 		CreateGrid ();
 		SetRandomCellWeights ();
 		SetAdjacents ();
-		Maze = new List<MazeNode> ();
-		Heap = new List<MazeNode> ();
+		Maze     = new List<MazeNode> ();
+		Heap     = new List<MazeNode> ();
+		MazeMap  = new Dictionary<Vector3, MazeNode> ();
+		bfsQueue = new Queue<MazeNode> ();
 		CreateMST ();
 		CreateMaze ();
+		BFS (Maze);
 	}
 
 	void BFS(List<MazeNode> maze)
 	{
-		foreach (MazeNode mainNode in Maze) {
-			if(!mainNode.bfsSeen){
-				mainNode.bfsSeen = true;
+		bfsQueue.Enqueue (maze [0]);
+		maze [0].bfsSeen = true;
+		maze [0].bfsParent = null;
+		while (bfsQueue.Count > 0)
+		{
+			MazeNode queElem = bfsQueue.Dequeue();
+			foreach(MazeNode adjacent in queElem.Adjacents)
+			{
+				if(!adjacent.bfsSeen)
+				{
+					adjacent.bfsSeen = true;
+					bfsQueue.Enqueue(adjacent);
+					adjacent.bfsParent = queElem;
+				}
 			}
 		}
 	}
@@ -79,6 +100,7 @@ public class GridScript : MonoBehaviour
 		//stupid repeat of same code happens below
 		//add start node
 		Maze.Add (start);
+		MazeMap.Add (start.thisEdge.position, start);
 		start.thisEdge.GetComponent<CellScript>().seen = true;
 		foreach (Transform adj in cell.GetComponent<CellScript>().Adjacents)
 		{
@@ -103,6 +125,7 @@ public class GridScript : MonoBehaviour
 				minNode.childWrtParent = WhereIsChild(minNode.parent.thisEdge.GetComponent<CellScript>().Position,
 				                                      minNode.thisEdge.GetComponent<CellScript>().Position);
 				Maze.Add(minNode);
+				MazeMap.Add (minNode.thisEdge.position, minNode);
 				//now add this vertex to the adjacent list of it's parent
 				minNode.parent.Adjacents.Add(minNode);
 			//	minNode.thisEdge.GetComponent<Renderer>().material.color = Color.red;

@@ -8,14 +8,9 @@ public class CellScript : MonoBehaviour {
 	public int Weight;
 	public bool seen = false;
 
+
 	public CellScript()
 	{
 		Adjacents = new List<Transform> ();
-	}
-
-	void OnTriggerEnter(Collider other)
-	{
-		string name = gameObject.tag;
-		Debug.Log (Position);
 	}
 }
