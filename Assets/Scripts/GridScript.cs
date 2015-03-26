@@ -11,6 +11,9 @@ public class MazeNode :  IComparable<MazeNode>
 	public MazeNode parent;
 	public Walls childWrtParent;
 	public enum Walls { NORTH, SOUTH, EAST, WEST };
+	//these fields are needed are bfs
+	public bool bfsSeen;
+	public MazeNode bfsParent;
 
 	public MazeNode(Transform edge, int weight, MazeNode forefather)
 	{
@@ -18,6 +21,7 @@ public class MazeNode :  IComparable<MazeNode>
 		edgeWeight = weight;
 		parent     = forefather;
 		Adjacents  = new List<MazeNode> ();
+		bfsSeen    = false;
 	}
 
 	public int CompareTo(MazeNode right)
@@ -43,6 +47,8 @@ public class GridScript : MonoBehaviour
 	// The shortest route to the exit 
 	// this will be populated by BFS
 	private List<Transform> parent;
+	//this will be the bfs tree with [0,0] as the start node
+	private List<MazeNode> BFSTree;
 
 	void Start()
 	{
@@ -57,7 +63,11 @@ public class GridScript : MonoBehaviour
 
 	void BFS(List<MazeNode> maze)
 	{
-
+		foreach (MazeNode mainNode in Maze) {
+			if(!mainNode.bfsSeen){
+				mainNode.bfsSeen = true;
+			}
+		}
 	}
 
 	void CreateMST()
