@@ -14,6 +14,7 @@ public class AntagonistAlone : MonoBehaviour {
 	List<MazeNode> Maze;
 	Dictionary<Vector3, MazeNode> MazeMap;
 	Vector3 whereIam;
+	Vector3 whereINeedToBe;
 	Vector3 intermediatePosn;
 	MazeNode currentNode;
 	MazeNode currentGoal;
@@ -38,27 +39,25 @@ public class AntagonistAlone : MonoBehaviour {
 
 	void OnTriggerEnter(Collider other)
 	{
-		whereIam = other.transform.position;
-		intermediatePosn = whereIam;
+		whereINeedToBe = other.transform.position;
+	//	intermediatePosn = whereIam;
 	//	Debug.Log (whereIam);
 	}
 
 	void Update()
 	{
 		m_speed = Time.deltaTime * m_speed_multi;
-		if (MazeMap.TryGetValue (whereIam, out currentNode)) {
+		whereIam = transform.position;
+		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
 			if(currentNode.bfsParent == null){
 				currentGoal = currentNode;
-				Vector3 distanceLeft = currentGoal.thisEdge.position - whereIam;
-				intermediatePosn += distanceLeft * m_speed;
-				transform.position = intermediatePosn;
 			}
 			else{
 				currentGoal = currentNode.bfsParent;
-				Vector3 distanceLeft = currentGoal.thisEdge.position - whereIam;
-				intermediatePosn += distanceLeft * m_speed;
-				transform.position = intermediatePosn;
 			}
+			Vector3 distanceLeft = currentGoal.thisEdge.position - whereIam;
+			whereIam += distanceLeft * m_speed;
+			transform.position = whereIam;
 		}
 	}
 
