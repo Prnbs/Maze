@@ -12,4 +12,10 @@ public class CellScript : MonoBehaviour {
 	{
 		Adjacents = new List<Transform> ();
 	}
+
+	void OnTriggerEnter(Collider other)
+	{
+		string name = gameObject.tag;
+		Debug.Log (Position);
+	}
 }

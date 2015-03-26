@@ -35,7 +35,7 @@ public class AntagonistAlone : MonoBehaviour {
 
 	void Update()
 	{
-		m_speed = Time.deltaTime * m_speed_multi;
+		/*m_speed = Time.deltaTime * m_speed_multi;
 		if (!reached) {
 			Vector3 whereIam = transform.position;
 			Vector3 distanceLeft = goal - whereIam;
@@ -49,7 +49,7 @@ public class AntagonistAlone : MonoBehaviour {
 				whereIam += distanceLeft * m_speed;
 				transform.position = whereIam;
 			}
-		}
+		}*/
 
 	}
 
