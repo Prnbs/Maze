@@ -9,7 +9,7 @@ public class AntagonistAlone : MonoBehaviour {
 	public float speed;
 
 	float m_speed;
-	float m_speed_multi = 2;
+	float m_speed_multi = 1.5f;
 
 	List<MazeNode> Maze;
 	Dictionary<Vector3, MazeNode> MazeMap;
@@ -19,6 +19,7 @@ public class AntagonistAlone : MonoBehaviour {
 	MazeNode currentNode;
 	MazeNode currentGoal;
 	public GameObject grid;
+	Vector3 origin = new Vector3(0f ,0f ,0f);
 	
 	// All physics code goes here
 	void FixedUpdate () {
@@ -51,12 +52,19 @@ public class AntagonistAlone : MonoBehaviour {
 		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
 			if(currentNode.bfsParent == null){
 				currentGoal = currentNode;
+				transform.rotation = Quaternion.identity;
 			}
 			else{
 				currentGoal = currentNode.bfsParent;
 			}
-			Vector3 distanceLeft = currentGoal.thisEdge.position - whereIam;
-			whereIam += distanceLeft * m_speed;
+			Vector3 diffVector = currentGoal.thisEdge.position - whereIam;
+			//TODO: Fix this annoying bug
+			diffVector.y = 0;
+			/*float distanceLeft = Vector3.Distance(diffVector, origin);
+			if(distanceLeft <= 0.1)
+			{
+			}*/
+			whereIam += diffVector * m_speed;
 			transform.position = whereIam;
 		}
 	}
