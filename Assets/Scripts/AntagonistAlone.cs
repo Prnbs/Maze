@@ -20,6 +20,8 @@ public class AntagonistAlone : MonoBehaviour {
 	MazeNode currentGoal;
 	public GameObject grid;
 	Vector3 origin = new Vector3(0f ,0f ,0f);
+
+	public Vector3 userInput;
 	
 	// All physics code goes here
 	void FixedUpdate () {
@@ -36,6 +38,7 @@ public class AntagonistAlone : MonoBehaviour {
 		rb = GetComponent<Rigidbody>();
 		Maze = grid.GetComponent<GridScript> ().Maze;
 		MazeMap = grid.GetComponent<GridScript> ().MazeMap;
+		userInput = Vector3.up;
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -45,19 +48,16 @@ public class AntagonistAlone : MonoBehaviour {
 	//	Debug.Log (whereIam);
 	}
 
+	//Update function which moves antagonist according to player input
 	void Update()
 	{
+		if (userInput == Vector3.up)
+			return;
 		m_speed = Time.deltaTime * m_speed_multi;
 		whereIam = transform.position;
-		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
-			if(currentNode.bfsParent == null){
-				currentGoal = currentNode;
-				transform.rotation = Quaternion.identity;
-			}
-			else{
-				currentGoal = currentNode.bfsParent;
-			}
-			Vector3 diffVector = currentGoal.thisEdge.position - whereIam;
+		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) 
+		{
+			Vector3 diffVector = userInput - whereIam;
 			//TODO: Fix this annoying bug
 			diffVector.y = 0;
 			/*float distanceLeft = Vector3.Distance(diffVector, origin);
@@ -69,6 +69,31 @@ public class AntagonistAlone : MonoBehaviour {
 		}
 	}
 
+
+	//Update function which runs BFS
+//	void Update()
+//	{
+//		m_speed = Time.deltaTime * m_speed_multi;
+//		whereIam = transform.position;
+//		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
+//			if(currentNode.bfsParent == null){
+//				currentGoal = currentNode;
+//				transform.rotation = Quaternion.identity;
+//			}
+//			else{
+//				currentGoal = currentNode.bfsParent;
+//			}
+//			Vector3 diffVector = currentGoal.thisEdge.position - whereIam;
+//			//TODO: Fix this annoying bug
+//			diffVector.y = 0;
+//			/*float distanceLeft = Vector3.Distance(diffVector, origin);
+//			if(distanceLeft <= 0.1)
+//			{
+//			}*/
+//			whereIam += diffVector * m_speed;
+//			transform.position = whereIam;
+//		}
+//	}
 			
 }
 		

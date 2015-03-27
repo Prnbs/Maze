@@ -235,8 +235,8 @@ public class GridScript : MonoBehaviour
 				newCell.GetComponent<CellScript>().Position = new Vector3(i, 0 , j);
 			}
 		}
-		Camera.main.transform.position = Grid [(int)(GridSize.x / 2), (int)(GridSize.z / 2)].position + Vector3.up * 40f;
-		Camera.main.orthographicSize   = Mathf.Max (GridSize.x/2, GridSize.z/2);
+		Camera.main.transform.position = Grid [(int)(GridSize.x / 2), (int)(GridSize.z / 2)].position + Vector3.up * 55f;
+		Camera.main.orthographicSize   = Mathf.Max (GridSize.x/2, GridSize.z/1.7f);
 	}
 
 	void SetRandomCellWeights()
