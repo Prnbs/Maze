@@ -1,10 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\AntagonistAlone.cs">
     <Files>
-      <File FileName="Assets\Scripts\AntagonistAlone.cs" Line="88" Column="1" />
-      <File FileName="Assets\Scripts\CameraControl.cs" Line="26" Column="3" />
-      <File FileName="Assets\Scripts\Player.cs" Line="37" Column="4" />
+      <File FileName="Assets\Scripts\AntagonistAlone.cs" Line="37" Column="46" />
+      <File FileName="Assets\Scripts\Player.cs" Line="25" Column="6" />
+      <File FileName="Assets\Scripts\GridScript.cs" Line="92" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

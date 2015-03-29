@@ -4,12 +4,8 @@ using System.Collections.Generic;
 
 
 public class AntagonistAlone : MonoBehaviour {
-			
-	private Rigidbody rb;
-	public float speed;
-
 	float m_speed;
-	float m_speed_multi = 1.5f;
+	float m_speed_multi = 0.8f;
 	static float yPosn = 0f;
 
 	List<MazeNode> Maze;
@@ -26,21 +22,19 @@ public class AntagonistAlone : MonoBehaviour {
 	Vector3 right    = new Vector3(0f ,yPosn ,-1f);
 	List<Ray> fourSides;
 	RaycastHit hit;
+	enum AntagonistStates {IDLE, SEEN, RETURN, REACHED_LAST_SEEN};
+	AntagonistStates state = AntagonistStates.IDLE;
+	Vector3 targetSeenAt = Vector3.up;
+	public GameObject playerObj;
+	private Player player;
 
-	// All physics code goes here
-	void FixedUpdate () {
-		float moveHori = Input.GetAxis ("Horizontal");
-		float moveVert = Input.GetAxis ("Vertical");
-		Vector3 movement = new Vector3 (moveHori, 0f, moveVert);
-		rb.AddForce (movement * speed * Time.deltaTime);
-	}
-	
 	void Start() {
-		rb = GetComponent<Rigidbody>();
+
 		Maze = grid.GetComponent<GridScript> ().Maze;
 		MazeMap = grid.GetComponent<GridScript> ().MazeMap;
 		whereIam = transform.position;
 		fourSides = new List<Ray> ();
+		player = playerObj.GetComponent<Player> ();
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -49,18 +43,53 @@ public class AntagonistAlone : MonoBehaviour {
 	}
 
 	void Update(){
-		Vector3 targetLoc;
+		m_speed = Time.deltaTime * m_speed_multi;
 		bool found = false;
-		SeekTarget (out targetLoc, out found);
-		if (found) {
-		//	Debug.Log(targetLoc);
-			GetToLastSeenTargetPosn(targetLoc);
+		if (HaveArrived (transform.position, targetSeenAt)) {
+
+			SeekTarget (out targetSeenAt, out found);
+		} 
+		else {
+			transform.GetComponent<Renderer>().material.color = Color.green;
 		}
+		if (found) {
+			state = AntagonistStates.SEEN;
+		}
+		if(HaveArrived(transform.position, targetSeenAt))
+			state = AntagonistStates.IDLE;
+
+		switch (state) {
+			case AntagonistStates.SEEN:{
+				transform.GetComponent<Renderer>().material.color = Color.red;
+				GetToLastSeenTargetPosn(targetSeenAt);
+				break;
+			}
+			case AntagonistStates.IDLE:
+			{
+				transform.GetComponent<Renderer>().material.color = Color.white;
+				break;
+			}
+			default:
+			{
+				transform.GetComponent<Renderer>().material.color = Color.yellow;
+				break;
+			}
+
+		}
+	}
+
+	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
+	{
+		if (targetLastSeenAt.Equals(Vector3.up))
+			return true;
+		float dist = Vector3.Distance (antagonistAt, targetLastSeenAt);
+		//Debug.Log (dist);
+		return (dist <= 0.4);
 	}
 
 	void GetToLastSeenTargetPosn(Vector3 target)
 	{
-		m_speed = Time.deltaTime * m_speed_multi;
+	//	m_speed = Time.deltaTime * m_speed_multi;
 		whereIam = transform.position;
 		
 		Vector3 diffVector = target - whereIam;
@@ -69,10 +98,10 @@ public class AntagonistAlone : MonoBehaviour {
 	
 		whereIam += diffVector * m_speed;
 		transform.position = whereIam;
-		
 	}
 
-	void SeekTarget(out Vector3 location, out bool found){
+	void SeekTarget(out Vector3 location, out bool found)
+	{
 		whereIam = transform.position;
 		location = Vector3.up;
 		found    = false;
@@ -87,14 +116,11 @@ public class AntagonistAlone : MonoBehaviour {
 		fourSides.Add (rayLeft);
 		fourSides.Add (rayRight);
 		foreach (Ray rayDir in fourSides) {
-			Debug.DrawRay(rayDir.origin,rayDir.direction);
-			//Debug.Log(rayDir);
+			//Debug.DrawRay(rayDir.origin,rayDir.direction);
 			if(Physics.Raycast(rayDir, out hit)){
-				Debug.Log(hit.collider.tag);
 				if(hit.collider.tag == "Target"){
-				//	Debug.Log("Hit");
-				//	Debug.Log(rayDir);
-					location = hit.collider.transform.position;
+					location =  player.whereHeSawMe;   //hit.collider.transform.position;
+					Debug.Log(location);
 					found = true;
 					break;
 				}
@@ -123,7 +149,6 @@ public class AntagonistAlone : MonoBehaviour {
 			transform.position = whereIam;
 		}
 	}
-			
 }
 		
 	
