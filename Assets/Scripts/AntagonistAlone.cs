@@ -27,6 +27,7 @@ public class AntagonistAlone : MonoBehaviour {
 	Vector3 targetSeenAt = Vector3.up;
 	public GameObject playerObj;
 	private Player player;
+	Vector3 lastSeenAt;
 
 	void Start() {
 
@@ -45,23 +46,32 @@ public class AntagonistAlone : MonoBehaviour {
 	void Update(){
 		m_speed = Time.deltaTime * m_speed_multi;
 		bool found = false;
-		if (HaveArrived (transform.position, targetSeenAt)) {
 
-			SeekTarget (out targetSeenAt, out found);
+		//targetSeenAt should round off to the Cell's collison boundary placed in the centre
+		SeekTarget (out targetSeenAt, out found);
+
+		if (!targetSeenAt.Equals (Vector3.up)) {
+			//the player could have run away in which case UP will be returned
+			lastSeenAt = targetSeenAt;
 		} 
-		else {
-			transform.GetComponent<Renderer>().material.color = Color.green;
-		}
-		if (found) {
+
+		if (found)
 			state = AntagonistStates.SEEN;
-		}
-		if(HaveArrived(transform.position, targetSeenAt))
-			state = AntagonistStates.IDLE;
+		else if(transform.position.Equals(lastSeenAt))
+		        state = AntagonistStates.IDLE;
+
+//		if (!HaveArrived (transform.position, lastSeenAt)) {
+//			//trigger dfs here
+//
+//		}
+
+//		Debug.Log(targetSeenAt);
 
 		switch (state) {
 			case AntagonistStates.SEEN:{
 				transform.GetComponent<Renderer>().material.color = Color.red;
-				GetToLastSeenTargetPosn(targetSeenAt);
+//				if(!lastSeenAt.Equals(Vector3.up))
+					GetToLastSeenTargetPosn(lastSeenAt);
 				break;
 			}
 			case AntagonistStates.IDLE:
@@ -83,26 +93,20 @@ public class AntagonistAlone : MonoBehaviour {
 		if (targetLastSeenAt.Equals(Vector3.up))
 			return true;
 		float dist = Vector3.Distance (antagonistAt, targetLastSeenAt);
-		//Debug.Log (dist);
-		return (dist <= 0.4);
+	//	Debug.Log (dist);
+		return (dist <= 0.09);
 	}
+
 
 	void GetToLastSeenTargetPosn(Vector3 target)
 	{
-	//	m_speed = Time.deltaTime * m_speed_multi;
-		whereIam = transform.position;
-		
-		Vector3 diffVector = target - whereIam;
-		//TODO: Fix this annoying bug
-		diffVector.y = 0;
-	
-		whereIam += diffVector * m_speed;
-		transform.position = whereIam;
+		transform.position = Vector3.MoveTowards (transform.position, target, 2.0f * Time.deltaTime);
 	}
 
 	void SeekTarget(out Vector3 location, out bool found)
 	{
 		whereIam = transform.position;
+		transform.GetComponent<Renderer>().material.color = Color.yellow;
 		location = Vector3.up;
 		found    = false;
 		//TODO:Fix accuracy problem
@@ -116,16 +120,19 @@ public class AntagonistAlone : MonoBehaviour {
 		fourSides.Add (rayLeft);
 		fourSides.Add (rayRight);
 		foreach (Ray rayDir in fourSides) {
-			//Debug.DrawRay(rayDir.origin,rayDir.direction);
+			Debug.DrawRay(rayDir.origin,rayDir.direction*10f);
 			if(Physics.Raycast(rayDir, out hit)){
+
 				if(hit.collider.tag == "Target"){
 					location =  player.whereHeSawMe;   //hit.collider.transform.position;
-					Debug.Log(location);
+					location.y = 0.4f;
+					Debug.Log (location);
 					found = true;
 					break;
 				}
 			}
 		}
+
 	}
 
 
