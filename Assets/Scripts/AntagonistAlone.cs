@@ -9,6 +9,7 @@ public class AntagonistAlone : MonoBehaviour {
 	static float yPosn = 0f;
 
 	List<MazeNode> Maze;
+	Queue<Vector3> lastTwoNodes;
 	Dictionary<Vector3, MazeNode> MazeMap;
 	Vector3 whereIam;
 	Vector3 whereINeedToBe;
@@ -22,7 +23,7 @@ public class AntagonistAlone : MonoBehaviour {
 	Vector3 right    = new Vector3(0f ,yPosn ,-1f);
 	List<Ray> fourSides;
 	RaycastHit hit;
-	enum AntagonistStates {IDLE, SEEN, RETURN, REACHED_LAST_SEEN};
+	enum AntagonistStates {IDLE, SEEN, RETURN, DEEP_SEARCH};
 	AntagonistStates state = AntagonistStates.IDLE;
 	Vector3 targetSeenAt = Vector3.up;
 	public GameObject playerObj;
@@ -38,12 +39,27 @@ public class AntagonistAlone : MonoBehaviour {
 		whereIam = transform.position;
 		fourSides = new List<Ray> ();
 		player = playerObj.GetComponent<Player> ();
+		lastTwoNodes = new Queue<Vector3> (2);
 	}
 
 	void OnTriggerEnter(Collider other)
 	{
 		whereINeedToBe = other.transform.position;
+
+		lastTwoNodes.Enqueue (whereINeedToBe);
+		while (lastTwoNodes.Count > 2)
+			lastTwoNodes.Dequeue ();
 	}
+
+	void DFS()
+	{
+		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
+			//currentNode is the startNode for DFS
+			//but among the adjacents of this node we need to prune the Node from which we just came
+			Debug.Log(lastTwoNodes.Peek());
+		}
+	}
+
 
 	void Update(){
 		m_speed = Time.deltaTime * m_speed_multi;
@@ -51,14 +67,17 @@ public class AntagonistAlone : MonoBehaviour {
 
 		//targetSeenAt should round off to the Cell's collison boundary placed in the centre
 		SeekTarget (out targetSeenAt, out found);
+//		Debug.Log (targetSeenAt);
 
+		//the player could have run away in which case UP will be returned
 		if (!targetSeenAt.Equals (Vector3.up)) {
-			//the player could have run away in which case UP will be returned
 			lastSeenAt = targetSeenAt;
 		} 
 
-		if (found)
+		if (found) {
 			state = AntagonistStates.SEEN;
+			wentToIdle = false;
+		}
 		else if (transform.position.Equals (lastSeenAt)) {
 			state = AntagonistStates.IDLE;
 			if(!wentToIdle){
@@ -67,19 +86,16 @@ public class AntagonistAlone : MonoBehaviour {
 			}
 		}
 		if (wentToIdle) {
-			Debug.Log(Time.unscaledTime - timeWhenWentIdle);
+			//perform DFS for 10s
 			if((Time.unscaledTime - timeWhenWentIdle) > 10){
 				state = AntagonistStates.RETURN;
 				wentToIdle = false;
 			}
+			else{
+				//trigger dfs here
+				state = AntagonistStates.DEEP_SEARCH;
+			}
 		}
-
-//		if (!HaveArrived (transform.position, lastSeenAt)) {
-//			//trigger dfs here
-//
-//		}
-
-//		Debug.Log(targetSeenAt);
 
 		switch (state) {
 			case AntagonistStates.SEEN:{
@@ -94,8 +110,13 @@ public class AntagonistAlone : MonoBehaviour {
 			}
 			case AntagonistStates.RETURN:
 			{
-				transform.GetComponent<Renderer>().material.color = Color.blue;
+				transform.GetComponent<Renderer>().material.color = Color.white;
 				GetToExit();
+				break;
+			}
+			case AntagonistStates.DEEP_SEARCH:{
+				transform.GetComponent<Renderer>().material.color = Color.green;
+				DFS();
 				break;
 			}
 			default:
@@ -107,6 +128,7 @@ public class AntagonistAlone : MonoBehaviour {
 		}
 	}
 
+	//TODO: DELETE
 	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
 	{
 		if (targetLastSeenAt.Equals(Vector3.up))
@@ -153,6 +175,7 @@ public class AntagonistAlone : MonoBehaviour {
 		}
 
 	}
+
 
 
 	//Uses BFS to get back to the exit
