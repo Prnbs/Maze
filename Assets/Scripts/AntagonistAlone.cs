@@ -28,6 +28,8 @@ public class AntagonistAlone : MonoBehaviour {
 	public GameObject playerObj;
 	private Player player;
 	Vector3 lastSeenAt;
+	bool wentToIdle;
+	float timeWhenWentIdle;
 
 	void Start() {
 
@@ -57,8 +59,20 @@ public class AntagonistAlone : MonoBehaviour {
 
 		if (found)
 			state = AntagonistStates.SEEN;
-		else if(transform.position.Equals(lastSeenAt))
-		        state = AntagonistStates.IDLE;
+		else if (transform.position.Equals (lastSeenAt)) {
+			state = AntagonistStates.IDLE;
+			if(!wentToIdle){
+				wentToIdle = true;
+				timeWhenWentIdle = Time.unscaledTime;
+			}
+		}
+		if (wentToIdle) {
+			Debug.Log(Time.unscaledTime - timeWhenWentIdle);
+			if((Time.unscaledTime - timeWhenWentIdle) > 10){
+				state = AntagonistStates.RETURN;
+				wentToIdle = false;
+			}
+		}
 
 //		if (!HaveArrived (transform.position, lastSeenAt)) {
 //			//trigger dfs here
@@ -70,13 +84,18 @@ public class AntagonistAlone : MonoBehaviour {
 		switch (state) {
 			case AntagonistStates.SEEN:{
 				transform.GetComponent<Renderer>().material.color = Color.red;
-//				if(!lastSeenAt.Equals(Vector3.up))
-					GetToLastSeenTargetPosn(lastSeenAt);
+				GetToLastSeenTargetPosn(lastSeenAt);
 				break;
 			}
 			case AntagonistStates.IDLE:
 			{
 				transform.GetComponent<Renderer>().material.color = Color.white;
+				break;
+			}
+			case AntagonistStates.RETURN:
+			{
+				transform.GetComponent<Renderer>().material.color = Color.blue;
+				GetToExit();
 				break;
 			}
 			default:
@@ -126,7 +145,7 @@ public class AntagonistAlone : MonoBehaviour {
 				if(hit.collider.tag == "Target"){
 					location =  player.whereHeSawMe;   //hit.collider.transform.position;
 					location.y = 0.4f;
-					Debug.Log (location);
+//					Debug.Log (location);
 					found = true;
 					break;
 				}
@@ -149,11 +168,10 @@ public class AntagonistAlone : MonoBehaviour {
 			else{
 				currentGoal = currentNode.bfsParent;
 			}
-			Vector3 diffVector = currentGoal.thisEdge.position - whereIam;
-			//TODO: Fix this annoying bug
-			diffVector.y = 0;
-			whereIam += diffVector * m_speed;
-			transform.position = whereIam;
+			Vector3 goal = currentGoal.thisEdge.position;
+			goal.y = 0.4f;
+
+			transform.position = Vector3.MoveTowards (transform.position, goal, 2.0f * Time.deltaTime);
 		}
 	}
 }
