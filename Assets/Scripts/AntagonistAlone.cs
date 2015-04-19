@@ -32,6 +32,12 @@ public class AntagonistAlone : MonoBehaviour {
 	bool wentToIdle;
 	float timeWhenWentIdle;
 
+	//DFS data structures
+	Transform[,] Grid;
+	bool startDFS;
+	MazeNode dfsStartPoint;
+
+
 	void Start() {
 
 		Maze = grid.GetComponent<GridScript> ().Maze;
@@ -40,6 +46,18 @@ public class AntagonistAlone : MonoBehaviour {
 		fourSides = new List<Ray> ();
 		player = playerObj.GetComponent<Player> ();
 		lastTwoNodes = new Queue<Vector3> (2);
+
+		//delete this
+		Grid = grid.GetComponent<GridScript> ().Grid;
+		Transform start = Grid [0, 0];
+
+		MazeNode startNode = new MazeNode (start, 0, null);//no parent for start cell
+		if (MazeMap.TryGetValue (startNode.thisEdge.position, out currentNode)) {
+			dfsStartPoint = currentNode;
+		}
+		startDFS = true;
+
+	
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -51,132 +69,49 @@ public class AntagonistAlone : MonoBehaviour {
 			lastTwoNodes.Dequeue ();
 	}
 
-	void DFS()
-	{
-		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
-			//currentNode is the startNode for DFS
-			//but among the adjacents of this node we need to prune the Node from which we just came
-			Debug.Log(lastTwoNodes.Peek());
-		}
-	}
-
-
-	void Update(){
-		m_speed = Time.deltaTime * m_speed_multi;
-		bool found = false;
-
-		//targetSeenAt should round off to the Cell's collison boundary placed in the centre
-		SeekTarget (out targetSeenAt, out found);
-//		Debug.Log (targetSeenAt);
-
-		//the player could have run away in which case UP will be returned
-		if (!targetSeenAt.Equals (Vector3.up)) {
-			lastSeenAt = targetSeenAt;
-		} 
-
-		if (found) {
-			state = AntagonistStates.SEEN;
-			wentToIdle = false;
-		}
-		else if (transform.position.Equals (lastSeenAt)) {
-			state = AntagonistStates.IDLE;
-			if(!wentToIdle){
-				wentToIdle = true;
-				timeWhenWentIdle = Time.unscaledTime;
-			}
-		}
-		if (wentToIdle) {
-			//perform DFS for 10s
-			if((Time.unscaledTime - timeWhenWentIdle) > 10){
-				state = AntagonistStates.RETURN;
-				wentToIdle = false;
-			}
-			else{
-				//trigger dfs here
-				state = AntagonistStates.DEEP_SEARCH;
-			}
-		}
-
-		switch (state) {
-			case AntagonistStates.SEEN:{
-				transform.GetComponent<Renderer>().material.color = Color.red;
-				GetToLastSeenTargetPosn(lastSeenAt);
-				break;
-			}
-			case AntagonistStates.IDLE:
-			{
-				transform.GetComponent<Renderer>().material.color = Color.white;
-				break;
-			}
-			case AntagonistStates.RETURN:
-			{
-				transform.GetComponent<Renderer>().material.color = Color.white;
-				GetToExit();
-				break;
-			}
-			case AntagonistStates.DEEP_SEARCH:{
-				transform.GetComponent<Renderer>().material.color = Color.green;
-				DFS();
-				break;
-			}
-			default:
-			{
-				transform.GetComponent<Renderer>().material.color = Color.yellow;
-				break;
-			}
-
-		}
-	}
-
 	//TODO: DELETE
-	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
+	void DFSInit()
 	{
-		if (targetLastSeenAt.Equals(Vector3.up))
-			return true;
-		float dist = Vector3.Distance (antagonistAt, targetLastSeenAt);
-	//	Debug.Log (dist);
-		return (dist <= 0.09);
-	}
-
-
-	void GetToLastSeenTargetPosn(Vector3 target)
-	{
-		transform.position = Vector3.MoveTowards (transform.position, target, 2.0f * Time.deltaTime);
-	}
-
-	void SeekTarget(out Vector3 location, out bool found)
-	{
-		whereIam = transform.position;
-		transform.GetComponent<Renderer>().material.color = Color.yellow;
-		location = Vector3.up;
-		found    = false;
-		//TODO:Fix accuracy problem
-		Ray rayFwd   = new Ray (whereIam, forward);
-		Ray rayBwd   = new Ray (whereIam, backward);
-		Ray rayLeft  = new Ray (whereIam, left);
-		Ray rayRight = new Ray (whereIam, right);
-		fourSides.Clear ();
-		fourSides.Add (rayFwd);
-		fourSides.Add (rayBwd);
-		fourSides.Add (rayLeft);
-		fourSides.Add (rayRight);
-		foreach (Ray rayDir in fourSides) {
-			Debug.DrawRay(rayDir.origin,rayDir.direction*10f);
-			if(Physics.Raycast(rayDir, out hit)){
-
-				if(hit.collider.tag == "Target"){
-					location =  player.whereHeSawMe;   //hit.collider.transform.position;
-					location.y = 0.4f;
-//					Debug.Log (location);
-					found = true;
-					break;
-				}
-			}
+//		startDFS = false;
+		Transform start = Grid [0, 0];
+		MazeNode startNode = new MazeNode (start, 0, null);//no parent for start cell
+		if (MazeMap.TryGetValue (startNode.thisEdge.position, out currentNode)) {
+			//currentNode is the startNode for DFS
+			StartCoroutine( DFS(currentNode, null));
+//			DFS(currentNode, null);
 		}
-
 	}
 
+	void FixedUpdate()
+	{
+		StartCoroutine	(DFS (dfsStartPoint, null));
+	}
 
+	IEnumerator DFS(MazeNode currentNode, MazeNode cameFrom)
+	{
+		//first move to currentNode
+		Vector3 target = currentNode.thisEdge.position;
+		target.y =  0.4f;
+		transform.position = Vector3.MoveTowards (transform.position, target, 0.2f * Time.deltaTime);
+//		GetToThisPosn (currentNode.thisEdge.position);
+		foreach(MazeNode node in currentNode.Adjacents)
+		{
+			if(node == cameFrom) continue;
+			//now move to this adjacent by calling DFS
+			yield return null;
+			StartCoroutine(DFS (node, cameFrom));
+
+			//Now move back to currentNode
+//			transform.position = Vector3.MoveTowards (transform.position, target, 0.2f * Time.deltaTime);
+
+		}
+	}
+	
+	void GetToThisPosn(Vector3 target)
+	{
+		target.y = 0.4f;
+		transform.position = Vector3.MoveTowards (transform.position, target, 0.04f * Time.deltaTime);
+	}
 
 	//Uses BFS to get back to the exit
 	void GetToExit()
@@ -196,6 +131,112 @@ public class AntagonistAlone : MonoBehaviour {
 
 			transform.position = Vector3.MoveTowards (transform.position, goal, 2.0f * Time.deltaTime);
 		}
+	}
+
+	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
+	{
+		if (targetLastSeenAt.Equals(Vector3.up))
+			return true;
+		float dist = Vector3.Distance (antagonistAt, targetLastSeenAt);
+		//	Debug.Log (dist);
+		return (dist <= 0.09);
+	}
+	
+	void SeekTarget(out Vector3 location, out bool found)
+	{
+		whereIam = transform.position;
+		transform.GetComponent<Renderer>().material.color = Color.yellow;
+		location = Vector3.up;
+		found    = false;
+		//TODO:Fix accuracy problem
+		Ray rayFwd   = new Ray (whereIam, forward);
+		Ray rayBwd   = new Ray (whereIam, backward);
+		Ray rayLeft  = new Ray (whereIam, left);
+		Ray rayRight = new Ray (whereIam, right);
+		fourSides.Clear ();
+		fourSides.Add (rayFwd);
+		fourSides.Add (rayBwd);
+		fourSides.Add (rayLeft);
+		fourSides.Add (rayRight);
+		foreach (Ray rayDir in fourSides) {
+			Debug.DrawRay(rayDir.origin,rayDir.direction*10f);
+			if(Physics.Raycast(rayDir, out hit)){
+				
+				if(hit.collider.tag == "Target"){
+					location =  player.whereHeSawMe;   //hit.collider.transform.position;
+					location.y = 0.4f;
+					//					Debug.Log (location);
+					found = true;
+					break;
+				}
+			}
+		}
+	}
+
+	void Update(){
+		m_speed = Time.deltaTime * m_speed_multi;
+		
+		//targetSeenAt should round off to the Cell's collison boundary placed in the centre
+		//		SeekTarget (out targetSeenAt, out found);
+		////		Debug.Log (targetSeenAt);
+		//
+		//		//the player could have run away in which case UP will be returned
+		//		if (!targetSeenAt.Equals (Vector3.up)) {
+		//			lastSeenAt = targetSeenAt;
+		//		} 
+		//
+		//		if (found) {
+		//			state = AntagonistStates.SEEN;
+		//			wentToIdle = false;
+		//		}
+		//		else if (transform.position.Equals (lastSeenAt)) {
+		//			state = AntagonistStates.IDLE;
+		//			if(!wentToIdle){
+		//				wentToIdle = true;
+		//				timeWhenWentIdle = Time.unscaledTime;
+		//			}
+		//		}
+		//		if (wentToIdle) {
+		//			//perform DFS for 10s
+		//			if((Time.unscaledTime - timeWhenWentIdle) > 10){
+		//				state = AntagonistStates.RETURN;
+		//				wentToIdle = false;
+		//			}
+		//			else{
+		//				//trigger dfs here
+		//				state = AntagonistStates.DEEP_SEARCH;
+		//			}
+		//		}
+		//
+		//		switch (state) {
+		//			case AntagonistStates.SEEN:{
+		//				transform.GetComponent<Renderer>().material.color = Color.red;
+		//				GetToThisPosn(lastSeenAt);
+		//				break;
+		//			}
+		//			case AntagonistStates.IDLE:
+		//			{
+		//				transform.GetComponent<Renderer>().material.color = Color.white;
+		//				break;
+		//			}
+		//			case AntagonistStates.RETURN:
+		//			{
+		//				transform.GetComponent<Renderer>().material.color = Color.white;
+		//				GetToExit();
+		//				break;
+		//			}
+		//			case AntagonistStates.DEEP_SEARCH:{
+		//				transform.GetComponent<Renderer>().material.color = Color.green;
+		//				DFSInit();
+		//				break;
+		//			}
+		//			default:
+		//			{
+		//				transform.GetComponent<Renderer>().material.color = Color.yellow;
+		//				break;
+		//			}
+		//		}
+		
 	}
 }
 		

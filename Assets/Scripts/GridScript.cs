@@ -212,13 +212,13 @@ public class GridScript : MonoBehaviour
 		}
 	}
 
-	void PrintMaze()
-	{
-		foreach (MazeNode ed in Maze) 
-		{
-			Debug.Log(ed.thisEdge.GetComponent<CellScript> ().name);
-		}
-	}
+//	void PrintMaze()
+//	{
+//		foreach (MazeNode ed in Maze) 
+//		{
+//			Debug.Log(ed.thisEdge.GetComponent<CellScript> ().name);
+//		}
+//	}
 
 	void CreateGrid()
 	{
