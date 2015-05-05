@@ -16,6 +16,9 @@ public class MazeNode :  IComparable<MazeNode>
 	public bool bfsSeen;
 	public MazeNode bfsParent;
 
+	//needed for dfs
+	public MazeNode dfsParent;
+
 	public MazeNode(Transform edge, int weight, MazeNode forefather)
 	{
 		thisEdge   = edge;
@@ -245,7 +248,7 @@ public class GridScript : MonoBehaviour
 		{
 			TextMesh childText = child.GetComponentInChildren<TextMesh>();
 			int weight		   = UnityEngine.Random.Range(0,100);
-			//childText.text = weight.ToString();
+			childText.text =  child.position.x.ToString() + "," + child.position.z.ToString();
 			child.GetComponent<CellScript>().Weight = weight;
 		}
 	}
