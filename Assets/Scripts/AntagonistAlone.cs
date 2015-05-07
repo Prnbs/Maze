@@ -55,7 +55,7 @@ public class AntagonistAlone : MonoBehaviour {
 			dfsStartPoint = currentNode;
 		}
 		startDFS = true;
-		StartCoroutine	(DFS (dfsStartPoint, null));
+		StartCoroutine	(DFSIterative (dfsStartPoint));
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -131,33 +131,58 @@ public class AntagonistAlone : MonoBehaviour {
 		transform.position = Vector3.MoveTowards (transform.position, target, 0.04f * Time.deltaTime);
 	}
 
-	//	IEnumerator DFSIterative(MazeNode currentNode)
-	//	{
-	//		if (dfsStack.Count != 0)
-	//			yield return null;
-	////		print ("Start dfs ");
-	//		currentNode.dfsParent = null;
-	//		dfsStack.Push (currentNode);
-	//		while (dfsStack.Count != 0) 
-	//		{
-	//			MazeNode node = dfsStack.Pop();
-	////			print ("Popped " + node.thisEdge.position);
-	//			Vector3 target = node.thisEdge.position;
-	//			target.y =  0.4f;
-	//			transform.position = Vector3.MoveTowards (transform.position, target, 2f * Time.deltaTime);
-	//			yield return null;
-	//			foreach(MazeNode adjacentNode in node.Adjacents)
-	//			{
-	////				print ("Pushed " + adjacentNode.thisEdge.position);
-	//				adjacentNode.dfsParent = node;
-	//
-	//				dfsStack.Push(adjacentNode);
-	//			}
-	//		}
-	//		print ("stack empty");
-	//	}
+	IEnumerator DFSIterative(MazeNode currentNode)
+	{
+		print ("Start dfs ");
+		currentNode.dfsParent = null;
+		dfsStack.Push (currentNode);
+		while (dfsStack.Count != 0) 
+		{
+			MazeNode node = dfsStack.Pop();
+			print ("Popped " + node.thisEdge.position);
+			print ("At " + transform.position);
 
+			/////Block to get to parent
+			if (node.dfsParent != null && 
+			    transform.position.x != node.dfsParent.thisEdge.position.x &&
+			    transform.position.z != node.dfsParent.thisEdge.position.z) 
+			{
+				print ("To parent");
+				print ("Parent "+ node.dfsParent.thisEdge.position);
+				while(transform.position.x != node.dfsParent.thisEdge.position.x && 
+				      transform.position.z != node.dfsParent.thisEdge.position.z)
+				{
+					Vector3 parent = node.dfsParent.thisEdge.position;
+					parent.y =  0.4f;
+					print ("Blocking to get to parent at " + parent + " of " + node.thisEdge.position);
+					print ("Currently at " + transform.position);
+					transform.position = Vector3.MoveTowards (transform.position, parent, 2f * Time.deltaTime);
+					yield return null;
+				}
+			 }
+			/// / End of block to get to parent
+			///Block to get to node
+			
+			Vector3 target = node.thisEdge.position;
+			target.y =  0.4f;
+			print ("To node " + target);
+			while(transform.position != target)
+			{
+				print ("Blocking to get to node at " + transform.position);
+				transform.position = Vector3.MoveTowards (transform.position, target, 2f * Time.deltaTime);
+				yield return null;
+			}
+		    /// End of block to get to node
+			foreach(MazeNode adjacentNode in node.Adjacents)
+			{
+//				print ("Pushed " + adjacentNode.thisEdge.position);
+				adjacentNode.dfsParent = node;
 
+				dfsStack.Push(adjacentNode);
+			}
+		}
+		print ("stack empty");
+	}
 
 	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
 	{
