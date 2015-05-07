@@ -136,6 +136,7 @@ public class AntagonistAlone : MonoBehaviour {
 		print ("Start dfs ");
 		currentNode.dfsParent = null;
 		dfsStack.Push (currentNode);
+		MazeNode lastItemPopped = null;
 		while (dfsStack.Count != 0) 
 		{
 			MazeNode node = dfsStack.Pop();
@@ -152,10 +153,15 @@ public class AntagonistAlone : MonoBehaviour {
 				while(transform.position.x != node.dfsParent.thisEdge.position.x && 
 				      transform.position.z != node.dfsParent.thisEdge.position.z)
 				{
-					Vector3 parent = node.dfsParent.thisEdge.position;
+					print ("LastItemPopped " + lastItemPopped.thisEdge.transform);
+					Vector3 parent = lastItemPopped.dfsParent.thisEdge.position;
+					if(transform.position.x == lastItemPopped.thisEdge.position.x && 
+					   transform.position.z == lastItemPopped.thisEdge.position.z)
+						lastItemPopped = lastItemPopped.dfsParent;
 					parent.y =  0.4f;
 					print ("Blocking to get to parent at " + parent + " of " + node.thisEdge.position);
 					print ("Currently at " + transform.position);
+
 					transform.position = Vector3.MoveTowards (transform.position, parent, 2f * Time.deltaTime);
 					yield return null;
 				}
@@ -168,7 +174,7 @@ public class AntagonistAlone : MonoBehaviour {
 			print ("To node " + target);
 			while(transform.position != target)
 			{
-				print ("Blocking to get to node at " + transform.position);
+				print ("Blocking to get to node at " + target);
 				transform.position = Vector3.MoveTowards (transform.position, target, 2f * Time.deltaTime);
 				yield return null;
 			}
@@ -180,6 +186,7 @@ public class AntagonistAlone : MonoBehaviour {
 
 				dfsStack.Push(adjacentNode);
 			}
+			lastItemPopped = node;
 		}
 		print ("stack empty");
 	}
