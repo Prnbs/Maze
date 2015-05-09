@@ -61,49 +61,7 @@ public class AntagonistAlone : MonoBehaviour {
 	void OnTriggerEnter(Collider other)
 	{
 		whereINeedToBe = other.transform.position;
-
-		lastTwoNodes.Enqueue (whereINeedToBe);
-		while (lastTwoNodes.Count > 2)
-			lastTwoNodes.Dequeue ();
-	}
-
-	//TODO: DELETE
-//	void DFSInit()
-//	{
-////		startDFS = false;
-//		Transform start = Grid [0, 0];
-//		MazeNode startNode = new MazeNode (start, 0, null);//no parent for start cell
-//		if (MazeMap.TryGetValue (startNode.thisEdge.position, out currentNode)) {
-//			//currentNode is the startNode for DFS
-//			StartCoroutine( DFS(currentNode, null));
-////			DFS(currentNode, null);
-//		}
-//	}
-
-	IEnumerator DFS(MazeNode currentNode, MazeNode cameFrom)
-	{
-		Debug.Log (currentNode.thisEdge.transform);
-		//first move to currentNode
-		Vector3 target = currentNode.thisEdge.position;
-		target.y =  0.4f;
-		while (transform.position != target) 
-		{
-			transform.position = Vector3.MoveTowards (transform.position, target, 2.0f * Time.deltaTime);
-//			Debug.Log ("Not reached");
-			yield return null;
-		}
-		Debug.Log ("Reached " + target);
-		foreach (MazeNode node in currentNode.Adjacents)
-		{
-			StartCoroutine (DFS (node, cameFrom));
-//			yield return null;
-		}
-//		while (transform.position != target) 
-//		{
-//			transform.position = Vector3.MoveTowards (transform.position, target, 2.0f * Time.deltaTime);
-////			Debug.Log ("Not reached");
-//			yield return null;
-//		}
+		other.transform.GetComponent<Renderer>().material.color = Color.red;
 	}
 
 	//Uses BFS to get back to the exit
@@ -133,49 +91,73 @@ public class AntagonistAlone : MonoBehaviour {
 
 	IEnumerator DFSIterative(MazeNode currentNode)
 	{
-		print ("Start dfs ");
+//		print ("Start dfs ");
 		currentNode.dfsParent = null;
 		dfsStack.Push (currentNode);
 		MazeNode lastItemPopped = null;
+		float speed = 3.0f;
 		while (dfsStack.Count != 0) 
 		{
 			MazeNode node = dfsStack.Pop();
-			print ("Popped " + node.thisEdge.position);
-			print ("At " + transform.position);
-
-			/////Block to get to parent
-			if (node.dfsParent != null && 
-			    transform.position.x != node.dfsParent.thisEdge.position.x &&
-			    transform.position.z != node.dfsParent.thisEdge.position.z) 
+//			print ("Popped " + node.thisEdge.position);
+//			if(node.dfsParent != null)
+//				print ("Parent " + node.dfsParent.thisEdge.transform);
+//			if(lastItemPopped != null)
+//				print ("LastItemPopped " + lastItemPopped.thisEdge.transform);
+			/////Block to get to parent of node
+			if (node.dfsParent != null)
 			{
-				print ("To parent");
-				print ("Parent "+ node.dfsParent.thisEdge.position);
-				while(transform.position.x != node.dfsParent.thisEdge.position.x && 
-				      transform.position.z != node.dfsParent.thisEdge.position.z)
+//				print ("To parent of just popped " + node.dfsParent.thisEdge.position);
+//				print ("WhereINeedToBe line 152 " + whereINeedToBe);
+//				print ("Trying to get to line 153" + node.dfsParent.thisEdge.position);
+				while(whereINeedToBe != node.dfsParent.thisEdge.position) 
 				{
-					print ("LastItemPopped " + lastItemPopped.thisEdge.transform);
-					Vector3 parent = lastItemPopped.dfsParent.thisEdge.position;
-					if(transform.position.x == lastItemPopped.thisEdge.position.x && 
-					   transform.position.z == lastItemPopped.thisEdge.position.z)
-						lastItemPopped = lastItemPopped.dfsParent;
+					//try to get to the last item popped
+					Vector3 parent = lastItemPopped.thisEdge.position;
+					//if I arrive at the lastItemPopped or am there right now
+					if(whereINeedToBe.x == lastItemPopped.thisEdge.position.x && 
+					   whereINeedToBe.z == lastItemPopped.thisEdge.position.z)
+					{
+						//then get to last item popped's parent
+//						print ("Arrived at last item popped");
+						if(lastItemPopped.dfsParent != null)
+						{
+//							print ("Get to last item popped's parent at "+lastItemPopped.dfsParent.thisEdge.position);
+							lastItemPopped = lastItemPopped.dfsParent;
+							parent = lastItemPopped.thisEdge.position;
+						}
+					}
 					parent.y =  0.4f;
-					print ("Blocking to get to parent at " + parent + " of " + node.thisEdge.position);
-					print ("Currently at " + transform.position);
-
-					transform.position = Vector3.MoveTowards (transform.position, parent, 2f * Time.deltaTime);
-					yield return null;
-				}
-			 }
+//					print ("Blocking to get to parent at " + parent);
+					if(lastItemPopped.dfsParent != null)
+					{
+//						print ("Grandparent " + lastItemPopped.dfsParent.thisEdge.position);
+//						lastItemPopped = lastItemPopped.dfsParent;
+//						parent = lastItemPopped.thisEdge.position;
+					}
+//					print ("Currently at " + transform.position);
+					while(transform.position != parent)
+					{
+						transform.position = Vector3.MoveTowards (transform.position, parent, speed * Time.deltaTime);
+						yield return null;
+					}
+				 }
+//				 print ("While for parent done");
+//				 print ("WhereINeedToBe line 189 " + whereINeedToBe);
+//				 print ("Trying to get to " + node.dfsParent.thisEdge.position);
+			}
 			/// / End of block to get to parent
 			///Block to get to node
 			
 			Vector3 target = node.thisEdge.position;
 			target.y =  0.4f;
-			print ("To node " + target);
+//			print ("To node " + target);
+//			if(node.dfsParent != null)
+//				print ("It's parent " + node.dfsParent.thisEdge.position);
 			while(transform.position != target)
 			{
-				print ("Blocking to get to node at " + target);
-				transform.position = Vector3.MoveTowards (transform.position, target, 2f * Time.deltaTime);
+//				print ("Blocking to get to node at " + target);
+				transform.position = Vector3.MoveTowards (transform.position, target, speed * Time.deltaTime);
 				yield return null;
 			}
 		    /// End of block to get to node
@@ -189,6 +171,7 @@ public class AntagonistAlone : MonoBehaviour {
 			lastItemPopped = node;
 		}
 		print ("stack empty");
+		GetToExit ();
 	}
 
 	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
