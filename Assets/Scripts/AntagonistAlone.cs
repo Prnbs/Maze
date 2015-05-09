@@ -82,7 +82,7 @@ public class AntagonistAlone : MonoBehaviour {
 			transform.position = Vector3.MoveTowards (transform.position, goal, 2.0f * Time.deltaTime);
 		}
 	}
-	
+
 	void GetToThisPosn(Vector3 target)
 	{
 		target.y = 0.4f;
@@ -91,7 +91,6 @@ public class AntagonistAlone : MonoBehaviour {
 
 	IEnumerator DFSIterative(MazeNode currentNode)
 	{
-//		print ("Start dfs ");
 		currentNode.dfsParent = null;
 		dfsStack.Push (currentNode);
 		MazeNode lastItemPopped = null;
@@ -99,17 +98,8 @@ public class AntagonistAlone : MonoBehaviour {
 		while (dfsStack.Count != 0) 
 		{
 			MazeNode node = dfsStack.Pop();
-//			print ("Popped " + node.thisEdge.position);
-//			if(node.dfsParent != null)
-//				print ("Parent " + node.dfsParent.thisEdge.transform);
-//			if(lastItemPopped != null)
-//				print ("LastItemPopped " + lastItemPopped.thisEdge.transform);
-			/////Block to get to parent of node
 			if (node.dfsParent != null)
 			{
-//				print ("To parent of just popped " + node.dfsParent.thisEdge.position);
-//				print ("WhereINeedToBe line 152 " + whereINeedToBe);
-//				print ("Trying to get to line 153" + node.dfsParent.thisEdge.position);
 				while(whereINeedToBe != node.dfsParent.thisEdge.position) 
 				{
 					//try to get to the last item popped
@@ -119,70 +109,61 @@ public class AntagonistAlone : MonoBehaviour {
 					   whereINeedToBe.z == lastItemPopped.thisEdge.position.z)
 					{
 						//then get to last item popped's parent
-//						print ("Arrived at last item popped");
 						if(lastItemPopped.dfsParent != null)
 						{
-//							print ("Get to last item popped's parent at "+lastItemPopped.dfsParent.thisEdge.position);
 							lastItemPopped = lastItemPopped.dfsParent;
 							parent = lastItemPopped.thisEdge.position;
 						}
 					}
 					parent.y =  0.4f;
-//					print ("Blocking to get to parent at " + parent);
-					if(lastItemPopped.dfsParent != null)
-					{
-//						print ("Grandparent " + lastItemPopped.dfsParent.thisEdge.position);
-//						lastItemPopped = lastItemPopped.dfsParent;
-//						parent = lastItemPopped.thisEdge.position;
-					}
-//					print ("Currently at " + transform.position);
 					while(transform.position != parent)
 					{
 						transform.position = Vector3.MoveTowards (transform.position, parent, speed * Time.deltaTime);
 						yield return null;
 					}
 				 }
-//				 print ("While for parent done");
-//				 print ("WhereINeedToBe line 189 " + whereINeedToBe);
-//				 print ("Trying to get to " + node.dfsParent.thisEdge.position);
 			}
-			/// / End of block to get to parent
+			///End of block to get to parent
 			///Block to get to node
 			
 			Vector3 target = node.thisEdge.position;
 			target.y =  0.4f;
-//			print ("To node " + target);
-//			if(node.dfsParent != null)
-//				print ("It's parent " + node.dfsParent.thisEdge.position);
 			while(transform.position != target)
 			{
-//				print ("Blocking to get to node at " + target);
 				transform.position = Vector3.MoveTowards (transform.position, target, speed * Time.deltaTime);
 				yield return null;
 			}
 		    /// End of block to get to node
 			foreach(MazeNode adjacentNode in node.Adjacents)
 			{
-//				print ("Pushed " + adjacentNode.thisEdge.position);
 				adjacentNode.dfsParent = node;
-
 				dfsStack.Push(adjacentNode);
 			}
 			lastItemPopped = node;
 		}
 		print ("stack empty");
-		GetToExit ();
+		//use bfs to get back to exit
+		//transform from vector to MazeNode
+		if (MazeMap.TryGetValue (whereINeedToBe, out currentNode)) {
+			while(currentNode.bfsParent != null)
+			{
+				currentGoal = currentNode.bfsParent;
+				currentNode = currentGoal;
+				Vector3 goal = currentGoal.thisEdge.position;
+				goal.y = 0.4f;
+				while(transform.position != goal)
+				{
+					transform.position = Vector3.MoveTowards (transform.position, goal, speed * Time.deltaTime);
+					yield return null;
+				}
+			}
+			if(currentNode.bfsParent == null){
+				currentGoal = currentNode;
+				transform.rotation = Quaternion.identity;
+			}
+		}
 	}
 
-	bool HaveArrived(Vector3 antagonistAt, Vector3 targetLastSeenAt)
-	{
-		if (targetLastSeenAt.Equals(Vector3.up))
-			return true;
-		float dist = Vector3.Distance (antagonistAt, targetLastSeenAt);
-		//	Debug.Log (dist);
-		return (dist <= 0.09);
-	}
-	
 	void SeekTarget(out Vector3 location, out bool found)
 	{
 		whereIam = transform.position;
